@@ -103,7 +103,7 @@ class MainWindow:
         brightness = self._brightness_entry.get()
 
         if brightness:
-            self._image = self._picture_manager.brighten_image(self._image, int(brightness))
+            self._image = self._picture_manager.brighten_image(self._image, float(brightness))
 
         resized = self._picture_manager.resize_image(self._image)
 

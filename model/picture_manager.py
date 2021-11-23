@@ -15,10 +15,14 @@ class PictureManager:
         image = Image.fromarray(bytes_array.astype('uint8'), 'RGB')
         return ImageTk.PhotoImage(image)
 
-    def brighten_image(self, image: numpy.array, brightness: int) -> numpy.array:
+    def brighten_image(self, image: numpy.array, brightness: float) -> numpy.array:
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         v = hsv[:, :, 2]
-        v = np.where(v <= 255 - brightness, v + brightness, 255)
+        if brightness >= 1:
+            v = np.where(v <= 255 - brightness, v + brightness, 255)
+        else:
+            v = v * brightness
+
         hsv[:, :, 2] = v
 
         brighten_image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
@@ -33,5 +37,3 @@ class PictureManager:
 
         if img_format == 'png':
             cv2.imwrite(path, np.flip(image, axis=-1))
-
-
