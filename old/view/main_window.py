@@ -16,7 +16,7 @@ class MainWindow:
         self._window = window
         self._picture_manager = picture_manager
 
-        self._brightness_applied = False
+        self._emboss_applied = False
 
         # main frame located in window
         self._program_frame = Frame(window)
@@ -29,15 +29,26 @@ class MainWindow:
         self._main_label = Label(self._controls_frame, font=('Arial', 14), text='Python image converter')
         self._main_label.pack(fill="both", expand=1)
 
-        # user's brightness entry
-        self._brightness_entry_label = Label(self._controls_frame, text="Brightness")
-        self._brightness_entry_label.pack(side=TOP)
-        self._brightness_entry = Entry(self._controls_frame)
-        self._brightness_entry.pack(side=TOP, pady=10)
+        # keep aspect ration flag
+        self._aspect_ration_value = IntVar()
+        self._aspect_ratio = Checkbutton(self._controls_frame, text="Aspect ratio", variable=self._aspect_ration_value)
+        self._aspect_ratio.pack()
+
+        # user's height entry
+        self._height_entry_label = Label(self._controls_frame, text="Height")
+        self._height_entry_label.pack(side=TOP)
+        self._height_entry = Entry(self._controls_frame)
+        self._height_entry.pack(side=TOP, pady=10)
+
+        # user's width entry
+        self._width_entry_label = Label(self._controls_frame, text="Width")
+        self._width_entry_label.pack(side=TOP)
+        self._width_entry = Entry(self._controls_frame)
+        self._width_entry.pack(side=TOP, pady=10)
 
         self.register_download_png_button(self._controls_frame)
-        self.register_download_jpeg_button(self._controls_frame)
-        self.register_brightness_button(self._controls_frame)
+        self.register_download_bmp_button(self._controls_frame)
+        self.register_emboss_button(self._controls_frame)
 
         # modified picture
         self._modified_picture = Label(self._program_frame, borderwidth=5, fg="gray", relief="raised")
@@ -77,7 +88,7 @@ class MainWindow:
         self._modified_picture.config(image=photo_image)
         self._modified_picture.image = photo_image
 
-        self._brightness_applied = False
+        self._emboss_applied = False
 
     def download_base_handler(self, image_format='png'):
         if not getattr(self, '_file_path', None):
@@ -88,22 +99,34 @@ class MainWindow:
         if not save_path:
             return
 
-        self._picture_manager.save_image(save_path, self._image, image_format)
+        height = self._height_entry.get()
+        width = self._width_entry.get()
+
+        if height and width:
+
+            base_image = self._image
+
+            if self._aspect_ration_value.get():
+                self._picture_manager.thumbnail_image(base_image, int(width), int(height))
+            else:
+                base_image = self._picture_manager.resize_image(base_image, int(width), int(height))
+
+            base_image.save(save_path, format=image_format)
+            return
+
+        self._image.save(save_path, format=image_format)
 
     def download_button_png_handler(self):
         self.download_base_handler('png')
 
-    def download_button_jpeg_handler(self):
-        self.download_base_handler('jpeg')
+    def download_button_bmp_handler(self):
+        self.download_base_handler('bmp')
 
-    def brightness_button_handler(self):
+    def emboss_button_handler(self):
         if not getattr(self, '_file_path', None):
             return
 
-        brightness = self._brightness_entry.get()
-
-        if brightness:
-            self._image = self._picture_manager.brighten_image(self._image, int(brightness))
+        self._image = self._picture_manager.emboss_image(self._image)
 
         resized = self._picture_manager.resize_image(self._image)
 
@@ -112,22 +135,22 @@ class MainWindow:
         self._modified_picture.config(image=pi)
         self._modified_picture.image = pi
 
-        self._brightness_applied = True
+        self._emboss_applied = True
 
     def register_download_png_button(self, frame):
         self._download_png_button = Button(frame, text='Download png',
                                            command=self.download_button_png_handler, height=2, width=30, bg='gray')
         self._download_png_button.pack(side=BOTTOM, pady=10)
 
-    def register_brightness_button(self, frame):
-        self._brighten_button = Button(frame, text='Apply brightness',
-                                       command=self.brightness_button_handler, height=2, width=30, bg='gray')
-        self._brighten_button.pack(side=BOTTOM, pady=10)
+    def register_emboss_button(self, frame):
+        self._emboss_button = Button(frame, text='Apply emboss',
+                                     command=self.emboss_button_handler, height=2, width=30, bg='gray')
+        self._emboss_button.pack(side=BOTTOM, pady=10)
 
-    def register_download_jpeg_button(self, frame):
-        self._download_jpeg_button = Button(frame, text='Download jpeg',
-                                            command=self.download_button_jpeg_handler, height=2, width=30, bg='gray')
-        self._download_jpeg_button.pack(side=BOTTOM, pady=10)
+    def register_download_bmp_button(self, frame):
+        self._download_bmp_button = Button(frame, text='Download bmp',
+                                           command=self.download_button_bmp_handler, height=2, width=30, bg='gray')
+        self._download_bmp_button.pack(side=BOTTOM, pady=10)
 
     def register_upload_button(self, frame):
         self._upload_button = Button(frame, text='Upload image',
